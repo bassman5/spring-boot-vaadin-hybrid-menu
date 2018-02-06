@@ -107,7 +107,6 @@ public class VaadinHybridMenuUI extends UI {
 				.setConfig(menuConfig)
 				.withNotificationCenter(this.notificationCenter)
 				.setInitNavigator(false)
-//				.withViewChangeManager(new SpringViewChangeManager())
 				.build();
 
 		// Define the TopMenu in this method
