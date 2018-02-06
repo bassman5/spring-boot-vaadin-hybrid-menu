@@ -4,15 +4,15 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Viewport;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.navigator.View;
+import com.vaadin.navigator.ViewDisplay;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
+import com.vaadin.spring.annotation.SpringViewDisplay;
 import com.vaadin.spring.navigator.SpringViewProvider;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import de.vidar.example.ui.manager.SpringViewChangeManager;
+import com.vaadin.ui.*;
 import de.vidar.example.ui.manager.NavigationManager;
 import de.vidar.example.ui.view.GroupPage;
 import de.vidar.example.ui.view.HomePage;
@@ -39,6 +39,8 @@ import kaesdingeling.hybridmenu.data.top.TopMenuButton;
 import kaesdingeling.hybridmenu.data.top.TopMenuLabel;
 import kaesdingeling.hybridmenu.data.top.TopMenuSubContent;
 
+import javax.annotation.PostConstruct;
+
 @SpringUI
 @Theme("mytheme")
 @Viewport("width=device-width,initial-scale=1.0,user-scalable=no")
@@ -58,6 +60,38 @@ public class VaadinHybridMenuUI extends UI {
 		setNavigator(this.navigationManager);
 	}
 
+	@SpringViewDisplay
+	public static class ViewContainer implements ViewDisplay {
+		private VerticalLayout layout;
+
+		@PostConstruct
+		void init() {
+			this.layout = new VerticalLayout();
+		}
+
+		@Override
+		public void showView(View view) {
+			//handle view display
+			layout.removeAllComponents();
+			layout.addComponent((Component) view);
+		}
+
+		public VerticalLayout getLayout() {
+			return layout;
+		}
+	}
+
+	private Layout getViewContainerLayout() {
+		// This asks the Spring Navigator where it will put new views
+		// The Spring Navigator has used the @SpringViewDisplay annotation to find our ViewContainer
+		// If our class is not defined just create a VerticalLayout, but not sure that will work
+		ViewDisplay display = navigationManager.getDisplay();
+		if (display instanceof ViewContainer) {
+			return ((ViewContainer) display).getLayout();
+		}
+		return new VerticalLayout();
+	}
+
 	@Override
 	protected void init(VaadinRequest vaadinRequest) {
 		UI.getCurrent().setPollInterval(5000);
@@ -68,12 +102,12 @@ public class VaadinHybridMenuUI extends UI {
 		this.notificationCenter = new NotificationCenter(5000);
 
 		this.hybridMenu = HybridMenuBuilder.get()
-				.setContent(new VerticalLayout())
+				.setContent(getViewContainerLayout())
 				.setMenuComponent(EMenuComponents.LEFT_WITH_TOP)
 				.setConfig(menuConfig)
 				.withNotificationCenter(this.notificationCenter)
 				.setInitNavigator(false)
-				.withViewChangeManager(new SpringViewChangeManager())
+//				.withViewChangeManager(new SpringViewChangeManager())
 				.build();
 
 		// Define the TopMenu in this method
